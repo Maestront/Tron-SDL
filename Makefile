@@ -3,8 +3,8 @@ CXXFLAGS = -I/path/to/SFML/include -L/path/to/SFML/lib -lsfml-graphics -lsfml-wi
 
 all: main
 
-bin/main : src/main.cpp
-	$(CXX) $< $(CXXFLAGS) -o $@
+bin/main : src/main.cpp include/*.hpp
+	$(CXX) $< $(CXXFLAGS) -I include -o $@
 	
 run : bin/main
 	./$<

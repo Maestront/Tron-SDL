@@ -1,6 +1,8 @@
 #include <SFML/Graphics.hpp>
 #include <time.h>
 #include <sstream>
+#include "Movement.hpp"
+#include "Texto.hpp"
 
 using namespace sf;
 
@@ -23,10 +25,11 @@ int dx2 = 0, dy2 = 0;
 int player2Counter = 0;
 int player2Score = 0;
 
+Movement m;
+
 int main()
 {
     RenderWindow window(VideoMode(W * size, H * size), "Tron");
-
     Texture t1, t2, t3;
     t1.loadFromFile("./assets/images/background.png");
     t2.loadFromFile("./assets/images/player1.png");
@@ -34,27 +37,14 @@ int main()
 
     Sprite Background(t1), Player1(t2), Player2(t3);
 
-    float timer = 0, delay = 0.1;
+    float timer = 0, delay = 0.05;
     Clock clock;
 
-    Font font;
-    if(!font.loadFromFile("./assets/fonts/CENTAUR.TTF"))
-    {
-        throw("Nope");
-    }
+    Texto tx;
 
-    Text cyan, red;
-    cyan.setFont(font);
-    cyan.setCharacterSize(24);
-    cyan.setFillColor(Color::Cyan);
-    cyan.setString("Cyan: ");
-    cyan.setPosition(0, 0);
-
-    red.setFont(font);
-    red.setCharacterSize(24);
-    red.setFillColor(Color::Red);
-    red.setString("Red: ");
-    red.setPosition(665, 0);
+    tx.loadFont();
+    tx.loadCyan();
+    tx.loadRed();
 
     while (window.isOpen())
     {
@@ -71,57 +61,15 @@ int main()
         }
 
         // Moving Player1 - LEFT RIGHT UP DOWN
-        if (Keyboard::isKeyPressed(Keyboard::Left) && dx != size)
-        {
-            dx = -size;
-            dy = 0;
-        }
-        if (Keyboard::isKeyPressed(Keyboard::Right) && dx != -size)
-        {
-            dx = size;
-            dy = 0;
-        }
-        if (Keyboard::isKeyPressed(Keyboard::Up) && dy != size)
-        {
-            dy = -size;
-            dx = 0;
-        }
-        if (Keyboard::isKeyPressed(Keyboard::Down) && dy != -size)
-        {
-            dy = size;
-            dx = 0;
-        }
+        
+        m.movePlayer1(dx, dy, size);
+        
+        // Moving Player2 - W A S D     
 
-        // Moving Player2 - W A S D
-        if (Keyboard::isKeyPressed(Keyboard::A) && dx2 != size)
-        {
-            dx2 = -size;
-            dy2 = 0;
-        }
-        if (Keyboard::isKeyPressed(Keyboard::D) && dx2 != -size)
-        {
-            dx2 = size;
-            dy2 = 0;
-        }
-        if (Keyboard::isKeyPressed(Keyboard::W) && dy2 != size)
-        {
-            dy2 = -size;
-            dx2 = 0;
-        }
-        if (Keyboard::isKeyPressed(Keyboard::S) && dy2 != -size)
-        {
-            dy2 = size;
-            dx2 = 0;
-        }
+        m.movePlayer2(dx2, dy2, size);
 
         if (timer > delay) // time
         {
-            x += dx;
-            y += dy;
-
-            x2 += dx2;
-            y2 += dy2;
-
             // Walking in Border Player1
             if (x >= (W * size))
                 x = 0;
@@ -145,16 +93,14 @@ int main()
                 y2 = (H - 1) * size;
 
             // Collision Player1
-            if (gameArray[y / size][x / size] == 1 && (dx + dy) != 0 ||
-                gameArray[y / size][x / size] == 2)
+            if (gameArray[y / size][x / size] == 1 && gameArray[y2 / size][x2 / size] != 2)
             {
                 player1Counter++;
                 player2Score++;
             }
 
             // Collision Player2
-            if (gameArray[y2 / size][x2 / size] == 2 && (dx2 + dy2) != 0 ||
-                gameArray[y2 / size][x2 / size] == 1)
+            if (gameArray[y2 / size][x2 / size] == 2 && gameArray[y / size][x / size] != 1)
             {
                 player2Counter++;
                 player1Score++;
@@ -198,33 +144,27 @@ int main()
         Player2.setPosition(x2, y2);
         window.draw(Player2);
 
-        //Retyping int to string red
-        std::stringstream ss;
-        ss << (player1Score);
-        std::string si;
-        ss >> si;
-        red.setString("Red: " + si);
+        // Retyping int to string red
+        tx.setStringCyan(player1Score);
 
-        //Retyping int to string cyan
-        std::stringstream ss2;
-        ss2 << (player2Score);
-        std::string si2;
-        ss2 >> si2;
-        cyan.setString("Cyan: " + si2);
+        // Retyping int to string cyan
+        tx.setStringRed(player2Score);
 
-        window.draw(cyan);  window.draw(red);
+        window.draw(tx.getCyan());
+        window.draw(tx.getRed());
 
-        if(player1Counter > 0 || player2Counter > 0) //GameLoop
+        if (player1Counter > 0 || player2Counter > 0) // GameLoop
         {
             sf::sleep(sf::microseconds(250));
-            x = 39 * size; y = 15 * size;
-            x2 = 5 * size; y2 = 15 * size;
-            dx = 0; dy = 0;
-            dx2 = 0; dy2 = 0;
-            player1Counter = 0; player2Counter = 0;
-            for(int i = 0; i < H; i++) //set each element in the array to zero
+            x = 39 * size;
+            y = 15 * size;
+            x2 = 5 * size;
+            y2 = 15 * size;
+            player1Counter = 0;
+            player2Counter = 0;
+            for (int i = 0; i < H; i++) // set each element in the array to zero
             {
-                for(int j = 0; j < W; j++)
+                for (int j = 0; j < W; j++)
                 {
                     gameArray[i][j] = 0;
                 }
